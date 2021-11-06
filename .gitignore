@@ -1,0 +1,10 @@
+# NPM packages
+node_modules/
+
+# Jetbrains IntelliJ IDEA files
+.idea/
+
+# PKI files
+*.pem
+*.key
+
