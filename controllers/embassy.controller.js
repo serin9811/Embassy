@@ -1,6 +1,6 @@
 const https = require("https");
 const fs = require("fs");
-const { resolve } = require("path");
+const emailController = require("./email.controller");
 
 const url =
   "https://www.fr.emb-japan.go.jp/itpr_fr/restrictionsdentree2021.html";
@@ -20,7 +20,12 @@ exports.checkPage = function (req, res) {
             if (data == content) {
               console.log("same file");
             } else {
-              console.log("diff");
+              console.log("There is change!");
+
+              var file = fs.createWriteStream("previsou.html");
+              response.pipe(file);
+
+              emailController.sendEmail();
             }
           });
         } else {
