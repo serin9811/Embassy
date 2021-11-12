@@ -6,8 +6,6 @@ const url =
   "https://www.fr.emb-japan.go.jp/itpr_fr/restrictionsdentree2021.html";
 
 exports.checkPage = function (req, res) {
-  res.send("will check page here!");
-
   var request = https.get(url, function (response) {
     var content = "";
     if (response.statusCode === 200) {
