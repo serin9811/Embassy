@@ -1,6 +1,7 @@
 const https = require("https");
 const fs = require("fs");
 const emailController = require("./email.controller");
+const { off } = require("process");
 
 const url =
   "https://www.fr.emb-japan.go.jp/itpr_fr/restrictionsdentree2021.html";
@@ -13,25 +14,35 @@ exports.checkPage = function (req, res) {
         content += chunk;
       });
       response.on("end", function () {
-        if (fs.existsSync("previous.html")) {
+        if (fs.existsSync("./previous.html")) {
           fs.readFile("previous.html", "utf-8", (err, data) => {
             if (data == content) {
-              console.log("same file");
+              res.json({ message: "content hasn't changed" });
             } else {
-              console.log("There is change!");
+              fs.writeFile("./previous.html", content, function (err) {
+                if (err) {
+                  res.json({ message: err });
 
-              var file = fs.createWriteStream("previsou.html");
-              response.pipe(file);
-
-              emailController.sendEmail();
+                  return;
+                }
+                emailController.sendEmail();
+                res.json({ message: "content has changed" });
+              });
             }
           });
         } else {
-          var file = fs.createWriteStream("previous.html");
-          response.pipe(file);
+          fs.writeFile("./previous.html", content, function (err) {
+            if (err) {
+              res.json({ message: err });
+
+              return;
+            }
+            res.json({ message: "content has changed initial" });
+          });
         }
       });
     }
+
     // Add timeout.
     request.setTimeout(12000, function () {
       request.destroy();

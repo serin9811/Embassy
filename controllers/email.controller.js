@@ -1,19 +1,22 @@
-var nodemailer = require("nodemailer");
+const dotenv = require("dotenv");
+const nodemailer = require("nodemailer");
+
+dotenv.config();
+
 const url =
   "https://www.fr.emb-japan.go.jp/itpr_fr/restrictionsdentree2021.html";
 
-var transporter = nodemailer.createTransport({
+const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: "serinaheo@gmail.com",
-    pass: "Serin123!",
+    user: process.env.NODEMAILER_USER,
+    pass: process.env.NODEMAILER_PASS,
   },
 });
 
-var mailOptions = {
-  from: "serinaheo@gmail.com",
-  to: "florian.ludot@gmail.com",
-  //to: "serinaheo@gmail.com",
+const mailOptions = {
+  from: process.env.NODEMAILER_FROM,
+  to: process.env.NODEMAILER_TO,
   subject: "Check French Embassy Website",
   text: "Check " + url + ". New information has been updated..!",
 };
