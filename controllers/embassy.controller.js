@@ -1,51 +1,42 @@
-const https = require("https");
-const fs = require("fs");
-const emailController = require("./email.controller");
-const { off } = require("process");
+const axios = require("axios");
+const dotenv = require("dotenv");
+const { isSamePageContent, sendEmail, writeFile } = require("../utils");
 
-const url =
-  "https://www.fr.emb-japan.go.jp/itpr_fr/restrictionsdentree2021.html";
+dotenv.config();
 
-exports.checkPage = function (req, res) {
-  var request = https.get(url, function (response) {
-    var content = "";
-    if (response.statusCode === 200) {
-      response.on("data", function (chunk) {
-        content += chunk;
-      });
-      response.on("end", function () {
-        if (fs.existsSync("./previous.html")) {
-          fs.readFile("previous.html", "utf-8", (err, data) => {
-            if (data == content) {
-              res.json({ message: "content hasn't changed" });
-            } else {
-              fs.writeFile("./previous.html", content, function (err) {
-                if (err) {
-                  res.json({ message: err });
-
-                  return;
-                }
-                emailController.sendEmail();
-                res.json({ message: "content has changed" });
-              });
-            }
-          });
-        } else {
-          fs.writeFile("./previous.html", content, function (err) {
-            if (err) {
-              res.json({ message: err });
-
-              return;
-            }
-            res.json({ message: "content has changed initial" });
-          });
+async function checkPage(req, res) {
+  try {
+    const { data } = await axios(process.env.URL_TO_FETCH);
+    try {
+      const isSame = await isSamePageContent(process.env.FILE_PATH, data);
+      if (isSame) {
+        res.json({ content: "Page content is same" });
+        return;
+      }
+      try {
+        await writeFile(process.env.FILE_PATH, data);
+        const info = await sendEmail();
+        res.json({ content: info });
+      } catch (err) {
+        res.status(500).json({ content: "There is error to send Email" });
+      }
+    } catch (err) {
+      // If the file doesn't exist
+      if (err.code === "ENOENT") {
+        try {
+          await writeFile(process.env.FILE_PATH, data);
+          res.json({ content: "File created" });
+          return;
+        } catch (err) {
+          res.status(500).json({ content: "There is error", err });
+          return;
         }
-      });
+      }
+      res.status(500).json({ content: "There is error", err });
     }
+  } catch (err) {
+    res.status(500).json({ content: "There is error", err });
+  }
+}
 
-    // Add timeout.
-    request.setTimeout(12000, function () {
-      request.destroy();
-    });
-  });
-};
+module.exports = { checkPage };
