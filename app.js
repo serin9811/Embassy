@@ -12,7 +12,7 @@ app.use(morgan("common"));
 app.use("/", router);
 
 cron.schedule("* * */6 * * *", async () => {
-  console.log("running a task every hour");
+  console.log("running a task every 6 hours");
 
   await fecthTheUrl();
 });
